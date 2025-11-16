@@ -18,7 +18,7 @@ kernel_start:
     cli
     xor rbp, rbp
 
-    ; setup stack: stack_top adalah label setelah reserved bss
+    ; setup stack
     mov rsp, stack_top
 
     ; call C entry
