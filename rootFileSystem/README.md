@@ -1,0 +1,1 @@
+this how layout File system looks, using FHS.
