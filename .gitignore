@@ -1,14 +1,10 @@
-*.tar
-*.tar.*
-*.jar
-*.exe
-*.msi
-*.deb
-*.zip
-*.tgz
-*.log
-*.log.*
-*.sig
+# ignore section that's file is too big
+# whitelist using: ! (!rootFileSystem/boot/*.txt)
 
-pkg/
-src/
+# Distribution build
+release/
+
+# rootFileSystem
+# boot
+rootFileSystem/boot/*
+!rootFileSystem/boot/README.md
