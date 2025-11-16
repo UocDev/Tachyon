@@ -1,6 +1,15 @@
 # ignore section that's file is too big
 # whitelist using: ! (!rootFileSystem/boot/*.txt)
 
+# Source code
+# boot
+boot/
+!boot/kernel.c
+!boot/kernel_entry.S
+!boot/linker.ld
+!boot/Makefile
+!boot/grub.cfg
+
 # Distribution build
 release/
 
