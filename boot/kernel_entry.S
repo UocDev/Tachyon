@@ -1,15 +1,20 @@
 ; kernel_entry.S - NASM, 64-bit entry + minimal Multiboot2 header
 BITS 64
 
-; --- Multiboot2 header (magic, architecture, header_length, checksum) ---
 section .multiboot2
 align 8
-    dd 0xE85250D6        ; multiboot2 magic
-    dd 0x00000000        ; architecture (0 = i386 compatible)
-    dd 16                ; header length (4 fields * 4 bytes)
-    dd 0x17ADAF1A        ; checksum = -(magic + arch + length) mod 2^32
+header_start:
+    ; Multiboot2 header (magic, architecture, header_length, checksum)
+    dd 0xE85250D6            ; magic
+    dd 0x0                   ; architecture (0 = i386)
+    dd header_end - header_start    ; header length (must be multiple of 8)
+    dd -(0xE85250D6 + 0 + (header_end - header_start)) ; checksum
 
-; --- Code ---
+    ; minimal tags: end tag
+    dd 0x0                   ; tag type = 0 (end)
+    dd 8                     ; tag size = 8
+header_end:
+
 section .text
 global kernel_start
 extern kernel_main
@@ -18,19 +23,17 @@ kernel_start:
     cli
     xor rbp, rbp
 
-    ; setup stack
     mov rsp, stack_top
 
-    ; call C entry
     call kernel_main
 
 .hang:
     hlt
     jmp .hang
 
-; --- BSS for stack ---
 section .bss
 align 16
-    resb 16384           ; 16 KiB stack
+    resb 16384
 stack_top:
+
 section .note.GNU-stack noalloc noexec nowrite progbits
