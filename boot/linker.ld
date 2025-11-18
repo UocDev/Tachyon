@@ -4,28 +4,25 @@ SECTIONS
 {
   . = 0x00100000;
 
-  .multiboot2 :
-  {
-    *(.multiboot2)
-  }
-
-  .text ALIGN(4K) : 
-  {
-    *(.text*)
+  /* Place multiboot2 header in the same PT_LOAD as .text */
+  .multiboot2 : AT(ADDR(.text)) {
+    KEEP(*(.multiboot2))
   } :text
 
-  .rodata ALIGN(4K) :
-  {
+  .text ALIGN(4K) : {
+    *(.text*)
+    *(.gnu.linkonce.t*)
+  } :text
+
+  .rodata ALIGN(4K) : {
     *(.rodata*)
   } :rodata
 
-  .data ALIGN(4K) :
-  {
+  .data ALIGN(4K) : {
     *(.data*)
   } :data
 
-  .bss ALIGN(4K) :
-  {
+  .bss ALIGN(4K) : {
     *(.bss*)
     *(COMMON)
   } :data
