@@ -1,36 +1,45 @@
 ENTRY(kernel_start)
 
+PHDRS
+{
+  text   PT_LOAD FLAGS(5); /* RX */
+  rodata PT_LOAD FLAGS(4); /* R  */
+  data   PT_LOAD FLAGS(6); /* RW */
+}
+
 SECTIONS
 {
-  . = 0x00100000;
+  /* Kernel load address */
+  . = 1M;
 
-  /* Place multiboot2 header in the same PT_LOAD as .text */
-  .multiboot2 : AT(ADDR(.text)) {
+  /* Multiboot2 header MUST be first */
+  .multiboot2 : ALIGN(8)
+  {
     KEEP(*(.multiboot2))
   } :text
 
-  .text ALIGN(4K) : {
+  /* Code */
+  .text : ALIGN(4K)
+  {
     *(.text*)
-    *(.gnu.linkonce.t*)
   } :text
 
-  .rodata ALIGN(4K) : {
+  /* Read-only data */
+  .rodata : ALIGN(4K)
+  {
     *(.rodata*)
   } :rodata
 
-  .data ALIGN(4K) : {
+  /* Data */
+  .data : ALIGN(4K)
+  {
     *(.data*)
   } :data
 
-  .bss ALIGN(4K) : {
-    *(.bss*)
+  /* BSS */
+  .bss : ALIGN(4K)
+  {
     *(COMMON)
+    *(.bss*)
   } :data
-}
-
-PHDRS
-{
-  text PT_LOAD FLAGS(5);   /* R + X */
-  rodata PT_LOAD FLAGS(4); /* R     */
-  data PT_LOAD FLAGS(6);   /* R + W */
 }
