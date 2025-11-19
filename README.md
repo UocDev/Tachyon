@@ -1,10 +1,16 @@
 ```
-this is free and open source custom OS (Operating System)
-made by UocDev and using GNU Utility components.
+Tachyon OS
+================
 
-this freedom to modify, copy, sub-publishing, sub-licence, using private,
-and/or for public domain under GNU GPL 2.0 License
+A free and open source custom Operating System made by UocDev, utilizing GNU Utility components.
 
-this project inspired by Linux Torvalds the Linux Kernel,
-some features may be same and/or copy from others Linux Distro
+Tachyon is a custom OS project inspired by Linus Torvalds' Linux Kernel. Some features may be similar to or derived from other Linux distributions.
+
+This project is licensed under the **GNU GPL 2.0 License**, providing freedom to:
+Modify
+Copy
+Sub-publish
+Sub-license
+Use privately
+Use for public domain
 ```
