@@ -2,20 +2,44 @@
 
 all: boot rootfs pack
 
+# ---------------------------------------------------------
+#  BUILD BOOT (SUBDIRECTORY)
+# ---------------------------------------------------------
+
 boot:
-	$(MAKE) -C boot
+	@printf "  BOOT    building boot/\n"
+	@$(MAKE) -C boot --no-print-directory
+
+# ---------------------------------------------------------
+#  ROOT FILESYSTEM
+# ---------------------------------------------------------
 
 rootfs:
-	@echo "[ROOTFS] Root filesystem ready"
+	@printf "  ROOTFS  ready\n"
+
+# ---------------------------------------------------------
+#  PACK ISO
+# ---------------------------------------------------------
 
 pack:
+	@printf "  PACK    release/myos.iso\n"
 	@mkdir -p release
-	cp boot/myos.iso release/myos.iso
-	@echo "[PACK] ISO copied to release/myos.iso"
+	@cp boot/myos.iso release/myos.iso
+
+# ---------------------------------------------------------
+#  CLEAN
+# ---------------------------------------------------------
 
 clean:
-	$(MAKE) -C boot clean
-	rm -rf release/*
+	@printf "  CLEAN   boot/\n"
+	@$(MAKE) -C boot clean --no-print-directory
+	@printf "  CLEAN   release/\n"
+	@rm -rf release/*
+
+# ---------------------------------------------------------
+#  FULL CLEAN
+# ---------------------------------------------------------
 
 distclean: clean
-	rm -rf rootFileSystem/*
+	@printf "  CLEAN   rootFileSystem/\n"
+	@rm -rf rootFileSystem/*
