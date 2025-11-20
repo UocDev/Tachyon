@@ -23,9 +23,10 @@ on:
 jobs:
 
   build-arch-Linux-environment:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     container:
       image: archlinux:latest
+      options: --privileged
 
     steps:
       - name: Initialize pacman keys (Arch requirement)
