@@ -53,7 +53,7 @@ jobs:
           - language: actions
             build-mode: none
           - language: c-cpp
-            build-mode: autobuild
+            build-mode: none
 
     steps:
       - name: Checkout repository
