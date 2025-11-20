@@ -25,7 +25,7 @@ jobs:
   build-arch-Linux-environment:
     runs-on: ubuntu-24.04-arm
     container:
-      image: archlinux:latest
+      image: archlinux/archlinux:base-archlinux-arm64
       options: --privileged
 
     steps:
@@ -33,7 +33,7 @@ jobs:
         run: pacman-key --init
 
       - name: Update system and Install useful tools
-        run: pacman -Syyu base-devel nasm binutils grub xorriso mtools e2fsprogs cpio git dosfstools --noconfirm
+        run: pacman -Syyu base-devel nasm binutils xorriso mtools e2fsprogs cpio git dosfstools --noconfirm
 
   analyze:
     needs: build-arch-Linux-environment
