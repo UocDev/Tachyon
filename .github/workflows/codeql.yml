@@ -32,7 +32,7 @@ jobs:
         run: pacman-key --init
 
       - name: Update system
-        run: pacman -Syu git base-davel --noconfirm
+        run: pacman -Syu git base-devel --noconfirm
 
   analyze:
     needs: build-arch-Linux-environment
