@@ -25,8 +25,7 @@ jobs:
   build-arch-Linux-environment:
     runs-on: ubuntu-24.04-arm
     container:
-      image: archlinux/archlinux:base-archlinux-arm64
-      options: --privileged
+      image: agners/archlinuxarm:latest
 
     steps:
       - name: Initialize pacman keys (Arch requirement)
