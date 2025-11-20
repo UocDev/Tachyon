@@ -23,7 +23,6 @@ on:
 jobs:
 
   build-arch-Linux-environment:
-    permissions: none
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -33,7 +32,7 @@ jobs:
         run: pacman-key --init
 
       - name: Update system
-        run: pacman -Syu --noconfirm
+        run: pacman -Syu git base-davel --noconfirm
 
   analyze:
     needs: build-arch-Linux-environment
