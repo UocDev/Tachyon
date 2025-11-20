@@ -31,8 +31,8 @@ jobs:
       - name: Initialize pacman keys (Arch requirement)
         run: pacman-key --init
 
-      - name: Update system
-        run: pacman -Syu git base-devel --noconfirm
+      - name: Update system and Install useful tools
+        run: pacman -Syyu base-devel nasm binutils grub xorriso mtools e2fsprogs cpio git dosfstools --noconfirm
 
   analyze:
     needs: build-arch-Linux-environment
