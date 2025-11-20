@@ -23,6 +23,7 @@ on:
 jobs:
 
   build-arch-Linux-environment:
+    permissions: none
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
