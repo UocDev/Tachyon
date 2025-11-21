@@ -23,7 +23,7 @@ on:
 jobs:
 
   build-arch-Linux-environment:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     container:
       image: archlinux:latest
 
