@@ -8,7 +8,7 @@ typedef unsigned short uint16_t;
 typedef unsigned char uint8_t;
 
 void kernel_main(void) {
-    const char *msg = "Hello from 64-bit kernel (GRUB -> QEMU)!";
+    const char *msg = "Hello world";
 
     volatile uint16_t *vga = (uint16_t*)0xB8000;
     uint16_t attr = 0x0F00; /* white on black */
