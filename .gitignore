@@ -4,14 +4,18 @@
 # Source code
 # boot
 boot/
-!boot/kernel.c
 !boot/kernel_entry.S
-!boot/linker.ld
 !boot/Makefile
 !boot/grub.cfg
 
+# kernel
+kernel/
+!kernel/kernel.c
+!kernel/Makefile
+
 # Distribution build
 release/
+iso/
 
 # rootFileSystem
 # boot
