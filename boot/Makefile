@@ -1,71 +1,30 @@
-AS := nasm
-CC := gcc
-LD := ld
+AS = nasm
 
-ISO := myos.iso
-KERNEL_ELF := iso/boot/kernel.elf
-ROOTFS_KERNEL := ../rootFileSystem/boot/kernel.elf
+ISO_BOOT := ../iso/boot
+ISO_GRUB := ../iso/boot/grub
 
-CFLAGS := -m64 -ffreestanding -nostdlib -fno-pie -fno-builtin
-LDFLAGS := -n -T linker.ld
+BOOTLOADER_SRC := bootloader.S
+BOOTLOADER_OBJ := bootloader.o
 
-.PHONY: all clean install-kernel run iso
+quiet_cmd_as = ASM     $<
+      cmd_as = $(AS) -f elf64 $< -o $@
 
-all: $(ISO) install-kernel
+quiet_cmd_copycfg = COPY    grub.cfg
+      cmd_copycfg = cp grub.cfg $(ISO_GRUB)/grub.cfg
 
-# ---------------------------------------------------------
-#  BUILD KERNEL ELF
-# ---------------------------------------------------------
+.PHONY: all clean
 
-$(KERNEL_ELF): kernel_entry.S kernel.c linker.ld grub.cfg
-	@mkdir -p iso/boot/grub
+all: $(ISO_GRUB)/grub.cfg $(BOOTLOADER_OBJ)
 
-	@printf "  AS      %s\n" "kernel_entry.S"
-	@$(AS) -f elf64 kernel_entry.S -o kernel_entry.o
+$(BOOTLOADER_OBJ): $(BOOTLOADER_SRC)
+	@mkdir -p $(ISO_BOOT) $(ISO_GRUB)
+	@echo "$(quiet_cmd_as)"
+	@$(cmd_as)
 
-	@printf "  CC      %s\n" "kernel.c"
-	@$(CC) $(CFLAGS) -c kernel.c -o kernel.o
-
-	@printf "  LD      %s\n" "$(KERNEL_ELF)"
-	@$(LD) $(LDFLAGS) -o $(KERNEL_ELF) kernel_entry.o kernel.o
-
-	@printf "  CP      %s → iso/boot/grub/grub.cfg\n" "grub.cfg"
-	@cp grub.cfg iso/boot/grub/grub.cfg
-
-# ---------------------------------------------------------
-#  GENERATE ISO
-# ---------------------------------------------------------
-
-$(ISO): $(KERNEL_ELF)
-	@printf "  MKISO   %s\n" "$(ISO)"
-	@grub-mkrescue -o $(ISO) iso
-
-# ---------------------------------------------------------
-#  INSTALL KERNEL TO rootFileSystem
-# ---------------------------------------------------------
-
-install-kernel: $(KERNEL_ELF)
-	@mkdir -p ../rootFileSystem/boot
-	@printf "  INSTALL %s → %s\n" "$(KERNEL_ELF)" "$(ROOTFS_KERNEL)"
-	@cp $(KERNEL_ELF) $(ROOTFS_KERNEL)
-
-# ---------------------------------------------------------
-#  RUN VIA QEMU
-# ---------------------------------------------------------
-
-run: $(ISO)
-	qemu-system-x86_64 \
-		-cdrom $(ISO) \
-		-m 1024 \
-		-no-reboot \
-		-nographic \
-		-serial mon:stdio \
-		-accel tcg,thread=single
-
-# ---------------------------------------------------------
-#  CLEAN BUILD OUTPUT
-# ---------------------------------------------------------
+$(ISO_GRUB)/grub.cfg: grub.cfg
+	@mkdir -p $(ISO_GRUB)
+	@echo "$(quiet_cmd_copycfg)"
+	@$(cmd_copycfg)
 
 clean:
-	@printf "  CLEAN\n"
-	@rm -rf iso *.o $(ISO)
+	@rm -f $(BOOTLOADER_OBJ)
