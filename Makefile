@@ -1,45 +1,34 @@
-.PHONY: all boot rootfs pack clean distclean
+# ============ DIRECTORIES ============
+BOOT_DIR := boot
+KERNEL_DIR := kernel
+ISO := release/myos.iso
 
-all: boot rootfs pack
+.PHONY: all boot kernel iso run clean
 
-# ---------------------------------------------------------
-#  BUILD BOOT (SUBDIRECTORY)
-# ---------------------------------------------------------
+all: boot kernel iso
 
 boot:
-	@printf "  BOOT    building boot/\n"
-	@$(MAKE) -C boot --no-print-directory
+	@$(MAKE) -C $(BOOT_DIR)
 
-# ---------------------------------------------------------
-#  ROOT FILESYSTEM
-# ---------------------------------------------------------
+kernel:
+	@$(MAKE) -C $(KERNEL_DIR)
 
-rootfs:
-	@printf "  ROOTFS  ready\n"
-
-# ---------------------------------------------------------
-#  PACK ISO
-# ---------------------------------------------------------
-
-pack:
-	@printf "  PACK    release/myos.iso\n"
+iso:
+	@echo "ISO     $(ISO)"
 	@mkdir -p release
-	@cp boot/myos.iso release/myos.iso
+	grub-mkrescue -o $(ISO) iso >/dev/null 2>&1
 
-# ---------------------------------------------------------
-#  CLEAN
-# ---------------------------------------------------------
+run:
+	qemu-system-x86_64 \
+		-cdrom $(ISO) \
+		-m 1720 \
+		-no-reboot \
+		-nographic
 
 clean:
-	@printf "  CLEAN   boot/\n"
-	@$(MAKE) -C boot clean --no-print-directory
-	@printf "  CLEAN   release/\n"
-	@rm -rf release/*
-
-# ---------------------------------------------------------
-#  FULL CLEAN
-# ---------------------------------------------------------
-
-distclean: clean
-	@printf "  CLEAN   rootFileSystem/\n"
-	@rm -rf rootFileSystem/*
+	@echo "CLEAN   boot/"
+	@$(MAKE) -C $(BOOT_DIR) clean
+	@echo "CLEAN   kernel/"
+	@$(MAKE) -C $(KERNEL_DIR) clean
+	@echo "CLEAN   release/"
+	rm -rf release iso
