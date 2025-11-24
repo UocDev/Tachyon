@@ -4,7 +4,7 @@
 # Source code
 # boot
 boot/
-!boot/kernel_entry.S
+!boot/bootloader.S
 !boot/Makefile
 !boot/grub.cfg
 
