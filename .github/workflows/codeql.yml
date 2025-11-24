@@ -22,20 +22,17 @@ on:
 
 jobs:
 
-  build-arch-Linux-environment:
+  setup-ubuntu:
     runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
-
     steps:
-      - name: Initialize pacman keys (Arch requirement)
-        run: pacman-key --init
+       - name: Fetching updates
+         run: sudo apt update -y
 
-      - name: Update system and Install useful tools
-        run: pacman -Syyu base-devel nasm binutils xorriso mtools e2fsprogs cpio git dosfstools --noconfirm
-
+       - name: Update system & dependencies
+         run: sudo apt full-upgrade -y
+  
   analyze:
-    needs: build-arch-Linux-environment
+    needs: setup-ubuntu
     name: Analyze (${{ matrix.language }})
 
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
