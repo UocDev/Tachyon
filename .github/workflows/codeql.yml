@@ -24,6 +24,7 @@ jobs:
 
   setup-ubuntu:
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
        - name: Fetching updates
          run: sudo apt update -y
