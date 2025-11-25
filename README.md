@@ -8,10 +8,12 @@ built using GNU utility components.
 
 This project draws inspiration from the Linux kernel 
 developed by Linus Torvalds. 
-Several features may resemble or derive from existing Linux distributions.
+Several features may resemble 
+or derive from existing Linux distributions.
 
 Tachyon OS is distributed under 
-the terms of the GNU GPL 2.0 license, granting the freedom to:
+the terms of the GNU GPL 2.0 license, 
+granting the freedom to:
 
 - Modify  
 - Copy  
@@ -21,5 +23,6 @@ the terms of the GNU GPL 2.0 license, granting the freedom to:
 - Use privately  
 - Use in the public domain  
 
-For apply for contributor please make application at uocdev.github.io@gmail.com
+For apply for contributor 
+please make application at uocdev.github.io@gmail.com
 ```
