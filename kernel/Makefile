@@ -7,30 +7,34 @@ ISO_BOOT := ../iso/boot
 CFLAGS = -m64 -ffreestanding -nostdlib -fno-pie -fno-builtin
 LDFLAGS = -n -T ../linker.ld
 
-KERNEL_SRC := kernel.c
-KERNEL_OBJ := kernel.o
+KERNEL_SRC := kernel.c idt.c isr.S
+KERNEL_OBJ := $(KERNEL_SRC:.c=.o)
+KERNEL_OBJ := $(KERNEL_OBJ:.S=.o)
+
 BOOTLOADER_OBJ := ../boot/bootloader.o
 KERNEL_ELF := $(ISO_BOOT)/kernel.elf
 
-# =======================
-# Pretty build (Kbuild)
-# =======================
 quiet_cmd_cc = CC      $<
       cmd_cc = $(CC) $(CFLAGS) -c $< -o $@
+
+quiet_cmd_asm = ASM     $<
+      cmd_asm = $(CC) $(CFLAGS) -c $< -o $@
 
 quiet_cmd_ld = LD      $(KERNEL_ELF)
       cmd_ld = $(LD) $(LDFLAGS) -o $(KERNEL_ELF) $(BOOTLOADER_OBJ) $(KERNEL_OBJ)
 
-quiet_cmd_copy = COPY    rootFileSystem/boot/kernel.elf
+quiet_cmd_copy = COPY    kernel.elf
       cmd_copy = cp $(KERNEL_ELF) $(ROOTFS_BOOT)/kernel.elf
-
-.PHONY: all clean
 
 all: $(KERNEL_ELF)
 
-$(KERNEL_OBJ): $(KERNEL_SRC)
+%.o: %.c
 	@echo "$(quiet_cmd_cc)"
 	@$(cmd_cc)
+
+%.o: %.S
+	@echo "$(quiet_cmd_asm)"
+	@$(cmd_asm)
 
 $(KERNEL_ELF): $(KERNEL_OBJ) $(BOOTLOADER_OBJ)
 	@mkdir -p $(ISO_BOOT) $(ROOTFS_BOOT)
@@ -40,5 +44,5 @@ $(KERNEL_ELF): $(KERNEL_OBJ) $(BOOTLOADER_OBJ)
 	@$(cmd_copy)
 
 clean:
-	rm -f $(KERNEL_OBJ)
+	rm -f *.o
 	rm -f $(ROOTFS_BOOT)/kernel.elf
