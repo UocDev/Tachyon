@@ -1,17 +1,20 @@
 ```
 Tachyon OS
-================
+==========
 
-A free and open source custom Operating System made by UocDev, utilizing GNU Utility components.
+Tachyon OS is a free and open-source custom Operating System created by UocDev, built using GNU utility components.
 
-Tachyon is a custom OS project inspired by Linus Torvalds Linux Kernel. Some features may be similar to or derived from other Linux distributions.
+This project draws inspiration from the Linux kernel developed by Linus Torvalds. Several features may resemble or derive from existing Linux distributions.
 
-This project is licensed under the **GNU GPL 2.0 License**, providing freedom to:
- 
-- Modify
-- Copy
-- Sub-publish
-- Sub-license
-- Use privately
-- Use for public domain
+Tachyon OS is distributed under the terms of the GNU GPL 2.0 license, granting the freedom to:
+
+- Modify  
+- Copy  
+- Redistribute  
+- Sub-publish  
+- Sub-license  
+- Use privately  
+- Use in the public domain  
+
+For apply for contributor please make application at uocdev.github.io@gmail.com
 ```
