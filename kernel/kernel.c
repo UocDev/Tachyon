@@ -132,12 +132,12 @@ void kernel_main(void) {
        - Uncomment to trigger a divide-by-zero exception
        - Uncomment to trigger a page-fault
     */
-    // serial_write("Triggering divide-by-zero...\n");
-    // volatile int z = 1 / 0;
+    serial_write("Triggering divide-by-zero...\n");
+    volatile int z = 1 / 0;
 
-    // serial_write("Triggering page fault by reading 0xDEADBEEF...\n");
-    // volatile uint64_t *p = (uint64_t*)0xDEADBEEF;
-    // (void)*p;
+    serial_write("Triggering page fault by reading 0xDEADBEEF...\n");
+    volatile uint64_t *p = (uint64_t*)0xDEADBEEF;
+    (void)*p;
 
     serial_write("Kernel reached idle loop.\n");
     vga_puts("Kernel ready. Idle...");
