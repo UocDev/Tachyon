@@ -1,32 +1,34 @@
-// kernel.c - runs in x86_64 long mode
+/* kernel/kernel.c */
 #include <stdint.h>
+#include "idt.h"
 
-static inline void outb(uint16_t port, uint8_t val) {
-    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+void isr_handler(uint64_t vector, uint64_t error)
+{
+    /* Untuk sementara print ke VGA text mode */
+    volatile char* vga = (char*)0xB8000;
+    vga[0] = 'E';
+    vga[1] = 0x4F;
+
+    vga[2] = 'X';
+    vga[3] = 0x4F;
+
+    vga[4] = 'C';
+    vga[5] = 0x4F;
+
+    vga[6] = '0' + (vector / 10);
+    vga[7] = 0x4F;
+    vga[8] = '0' + (vector % 10);
+    vga[9] = 0x4F;
+
+    while (1) asm("hlt");
 }
 
-void serial_write(const char* s) {
-    while (*s) {
-        outb(0x3F8, *s++);
-    }
-}
+void kernel_main()
+{
+    idt_init();
 
-void kernel_main(void) {
-    const char *msg = "Hello from Tachyon 64-bit kernel!\n";
-    serial_write(msg);
+    /* Trigger test exception: divide by zero */
+    int a = 1 / 0;
 
-    volatile uint16_t *vga = (uint16_t*)0xB8000;
-    uint16_t attr = 0x0F00;
-
-    for (int i = 0; i < 80; ++i) vga[i] = ' ' | attr;
-
-    int i = 0;
-    while (msg[i]) {
-        vga[i] = (uint16_t)msg[i] | attr;
-        ++i;
-    }
-
-    for (;;) {
-        __asm__ volatile ("hlt");
-    }
+    while (1) asm("hlt");
 }
