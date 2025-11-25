@@ -10,7 +10,8 @@ This project draws inspiration from the Linux kernel
 developed by Linus Torvalds. 
 Several features may resemble or derive from existing Linux distributions.
 
-Tachyon OS is distributed under the terms of the GNU GPL 2.0 license, granting the freedom to:
+Tachyon OS is distributed under 
+the terms of the GNU GPL 2.0 license, granting the freedom to:
 
 - Modify  
 - Copy  
