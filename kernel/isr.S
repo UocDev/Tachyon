@@ -91,3 +91,5 @@ ISR_NOERR 28
 ISR_NOERR 29
 ISR_NOERR 30
 ISR_NOERR 31
+
+.section .note.GNU-stack,"",@progbits
