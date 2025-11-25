@@ -12,6 +12,9 @@ boot/
 kernel/
 !kernel/kernel.c
 !kernel/Makefile
+!kernel/isr.S
+!kernel/idt.c
+!kernel/idt.h
 
 # Distribution build
 release/
