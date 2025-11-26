@@ -1,7 +1,7 @@
 # ============ DIRECTORIES ============
 BOOT_DIR := boot
 KERNEL_DIR := kernel
-ISO := release/myos.iso
+ISO := release/tachyon.iso
 
 .PHONY: all boot kernel iso run clean
 
