@@ -1,4 +1,8 @@
 // kernel/kernel.c
+
+// @UocDev — Type Notation
+// @NurAzizha — Helper
+
 #include <stdint.h>
 #include "idt.h"
 

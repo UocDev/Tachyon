@@ -1,4 +1,8 @@
 /* kernel/isr.S */
+
+// @UocDev — Type Notation
+// @NurAzizah — Helper
+
     .intel_syntax noprefix
     .section .text
     .global isr_handler

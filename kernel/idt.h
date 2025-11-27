@@ -1,4 +1,8 @@
 /* kernel/idt.h */
+
+// @UocDev — Type Notation
+// @NurAzizah — Helper
+
 #ifndef IDT_H
 #define IDT_H
 

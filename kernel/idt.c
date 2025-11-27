@@ -1,4 +1,8 @@
 /* kernel/idt.c */
+
+// @UocDev — Type Notation
+// @NurAzizah — Helper
+
 #include "idt.h"
 
 extern void isr0();
