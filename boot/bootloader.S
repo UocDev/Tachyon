@@ -1,5 +1,10 @@
 ; kernel_entry.S - NASM
 ; 32-bit entry (GRUB -> protected mode) then trampoline to 64-bit long mode
+
+; @UocDev — Notation type
+; @NurAzizah — Helper
+
+
 BITS 32
 default rel
 
