@@ -1,4 +1,5 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B11BJZAU)
+[![CodeQL Advanced](https://github.com/UocDev/Tachyon/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/UocDev/Tachyon/actions/workflows/codeql.yml)
 ```
 Tachyon OS
 ==========
