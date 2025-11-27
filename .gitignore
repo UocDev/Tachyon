@@ -15,6 +15,8 @@ kernel/
 !kernel/isr.S
 !kernel/idt.c
 !kernel/idt.h
+!/kernel/gdt.c
+!/kernel/gdt.h
 
 # Distribution build
 release/
