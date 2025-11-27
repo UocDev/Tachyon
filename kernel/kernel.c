@@ -1,10 +1,10 @@
 // kernel/kernel.c
-
 // @UocDev — Type Notation
 // @NurAzizha — Helper
 
 #include <stdint.h>
 #include "idt.h"
+#include "gdt.h"    /* <-- added support for GDT/TSS */
 
 /* ---------- Serial (COM1) ---------- */
 static inline void outb(uint16_t port, uint8_t val) {
@@ -118,6 +118,26 @@ void isr_handler(uint64_t vector, uint64_t error) {
     while (1) __asm__ volatile ("cli; hlt");
 }
 
+/* ---------- helpers to trigger exceptions cleanly ---------- */
+/* Trigger divide-by-zero via inline asm to avoid -Wdiv-by-zero warning */
+static void trigger_divide_by_zero(void) {
+    asm volatile (
+        "xor %%rdx, %%rdx\n\t"   /* clear RDX for dividend hi */
+        "mov $1, %%rax\n\t"      /* dividend low */
+        "xor %%rbx, %%rbx\n\t"   /* divisor = 0 */
+        "idiv %%rbx\n\t"         /* will generate #DE */
+        :
+        :
+        : "rax","rbx","rdx"
+    );
+}
+
+/* Trigger page-fault by dereferencing a known bad address */
+static void trigger_page_fault(void) {
+    volatile uint64_t *p = (volatile uint64_t*)0xDEADBEEF;
+    (void)*p;
+}
+
 /* ---------- kernel_main ---------- */
 void kernel_main(void) {
     serial_init();
@@ -125,23 +145,25 @@ void kernel_main(void) {
 
     vga_clear();
     vga_puts("Tachyon 64-bit kernel\n");
+    vga_puts("Installing GDT/TSS...\n");
+
+    /* install GDT + TSS first */
+    gdt_install();
+    serial_write("GDT+TSS installed.\n");
+    vga_puts("GDT+TSS installed.\n");
+
     vga_puts("Initializing IDT...\n");
-
     idt_init();
-
     serial_write("IDT installed.\n");
     vga_puts("IDT installed.\n");
 
-    /* Optional tests:
-       - Uncomment to trigger a divide-by-zero exception
-       - Uncomment to trigger a page-fault
-    */
-    serial_write("Triggering divide-by-zero...\n");
-    volatile int z = 1 / 0;
+    serial_write("TEST: Triggering divide-by-zero...\n");
+    /* use asm-trigger to avoid compile-time warning */
+    trigger_divide_by_zero();
 
-    serial_write("Triggering page fault by reading 0xDEADBEEF...\n");
-    volatile uint64_t *p = (uint64_t*)0xDEADBEEF;
-    (void)*p;
+    /* won't reach here if exception occurs; otherwise test page-fault */
+    serial_write("TEST: Triggering page fault by reading 0xDEADBEEF...\n");
+    trigger_page_fault();
 
     serial_write("Kernel reached idle loop.\n");
     vga_puts("Kernel ready. Idle...");
