@@ -1,10 +1,17 @@
 // kernel/kernel.c
+
 // @UocDev — Type Notation
 // @NurAzizha — Helper
 
 #include <stdint.h>
 #include "idt.h"
 #include "gdt.h"    /* <-- added support for GDT/TSS */
+
+__attribute__((aligned(16)))
+uint8_t kernel_stack[8192];     // 8 KB kernel stack
+
+// simbol yang diminta gdt.c
+void *stack_end = &kernel_stack[8192];
 
 /* ---------- Serial (COM1) ---------- */
 static inline void outb(uint16_t port, uint8_t val) {

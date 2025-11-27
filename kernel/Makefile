@@ -7,7 +7,7 @@ ISO_BOOT := ../iso/boot
 CFLAGS = -m64 -ffreestanding -nostdlib -fno-pie -fno-builtin
 LDFLAGS = -n -T ../linker.ld
 
-KERNEL_SRC := kernel.c idt.c isr.S
+KERNEL_SRC := kernel.c idt.c isr.S gdt.c
 KERNEL_OBJ := $(KERNEL_SRC:.c=.o)
 KERNEL_OBJ := $(KERNEL_OBJ:.S=.o)
 
