@@ -1,3 +1,9 @@
 [submodule "dependencies/TachyonSubModule"]
 	path = dependencies/TachyonSubModule
 	url = https://github.com/UocDev/TachyonSubModule
+[submodule "dependencies/bash"]
+	path = dependencies/bash
+	url = https://git.savannah.gnu.org/git/bash.git
+[submodule "dependencies/gcc"]
+	path = dependencies/gcc
+	url = https://gcc.gnu.org/git/gcc.git
