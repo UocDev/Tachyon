@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
           fetch-depth: 1
 
       - name: Setup Node.js
@@ -33,7 +33,7 @@ jobs:
 
       - name: Update submodules
         run: |
-          git submodule update --remote --merge
+          git submodule update --remote --recursive
           git status
 
       - name: Commit & Push as Bot
