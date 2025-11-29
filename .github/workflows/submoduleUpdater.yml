@@ -1,4 +1,4 @@
-name: Auto Update Submodules (Signed)
+name: Daily Submodule Update
 
 on:
   schedule:
@@ -6,39 +6,37 @@ on:
   workflow_dispatch:
 
 jobs:
-  update:
+  update-submodules:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
           fetch-depth: 1
-          token: ${{ secrets.NAN_DNF }}
 
-      - name: Update all submodules
-        run: |
-          git submodule update --remote --recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Detect changes
-        id: changes
-        run: |
-          if git status --porcelain | grep .; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Install deps
+        run: npm install node-fetch jsonwebtoken
 
-      - name: Commit changes (SIGNED)
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-          git add .
-          git commit -m "chore: auto update submodules (signed)"
+      - name: Generate Bot Token
+        run: node .github/bot/token.js
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Push
-        if: steps.changes.outputs.changed == 'true'
+      - name: Update submodules
         run: |
-          git push origin HEAD
+          git submodule update --remote --merge
+          git status
+
+      - name: Commit & Push as Bot
+        run: node .github/bot/push.js
+        env:
+          BOT_TOKEN: ${{ env.BOT_TOKEN }}
