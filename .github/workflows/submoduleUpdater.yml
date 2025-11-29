@@ -10,18 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main repo with submodules
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update all submodules
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          gpg-connect-agent reloadagent /bye
+
+      - name: Configure git signing
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git config --global commit.gpgsign true
+          git config --global gpg.program gpg
+          git config --global user.signingkey $(gpg --list-secret-keys --keyid-format=long | grep sec | awk '{print $2}' | cut -d'/' -f2)
+
+      - name: Update submodules
         run: |
           git submodule update --remote --recursive
 
-      - name: Check for changes
+      - name: Check changes
         id: changes
         run: |
           if git status --porcelain | grep .; then
@@ -30,15 +45,13 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit updates
+      - name: Commit signed changes
         if: steps.changes.outputs.changed == 'true'
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
           git add .
-          git commit -m "chore: auto update submodules"
+          git commit -S -m "chore: auto update submodules (signed)"
 
-      - name: Push changes
+      - name: Push
         if: steps.changes.outputs.changed == 'true'
         run: |
           git push origin HEAD
