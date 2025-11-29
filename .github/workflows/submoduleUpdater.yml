@@ -33,6 +33,8 @@ jobs:
       - name: Commit changes (SIGNED)
         if: steps.changes.outputs.changed == 'true'
         run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
           git add .
           git commit -m "chore: auto update submodules (signed)"
 
