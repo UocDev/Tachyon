@@ -1,0 +1,44 @@
+name: Auto Update Submodules
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repo with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update all submodules
+        run: |
+          git submodule update --remote --recursive
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git status --porcelain | grep .; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit updates
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "chore: auto update submodules"
+
+      - name: Push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git push origin HEAD
