@@ -1,4 +1,4 @@
-name: Auto Update Submodules
+name: Auto Update Submodules (Signed)
 
 on:
   schedule:
@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 1
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup GPG (non-interactive)
+      - name: Import GPG key (loopback mode)
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
@@ -27,24 +27,19 @@ jobs:
           echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
           echo "pinentry-mode loopback"  > ~/.gnupg/gpg.conf
 
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
           gpg-connect-agent reloadagent /bye
 
-      - name: Configure Git for signed commits
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Configure git for signed commits
         run: |
           KEY_ID=$(gpg --list-secret-keys --keyid-format=long | grep sec | awk '{print $2}' | cut -d'/' -f2)
 
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git config --global commit.gpgsign true
-          git config --global gpg.program gpg
           git config --global user.signingkey "$KEY_ID"
+          git config --global commit.gpgsign true
 
-          git config --global gpg.format openpgp
-
-          echo "export GPG_TTY=/dev/null" >> ~/.bashrc
+          git config --global gpg.program "gpg --batch --pinentry-mode loopback"
 
       - name: Update all submodules
         run: |
@@ -64,14 +59,11 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          export GPG_TTY=/dev/null
           git add .
+          git commit -S -m "chore: auto update submodules (signed)"
 
-          printf "%s" "$GPG_PASSPHRASE" | \
-          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 -sba /dev/null >/dev/null
-
-          git commit -S --no-edit -m "chore: auto update submodules (signed)"
-
-      - name: Push changes
+      - name: Push
         if: steps.changes.outputs.changed == 'true'
         run: |
           git push origin HEAD
