@@ -15,31 +15,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Import GPG key (loopback mode)
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-
-          echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
-          echo "pinentry-mode loopback"  > ~/.gnupg/gpg.conf
-
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-          gpg-connect-agent reloadagent /bye
-
-      - name: Configure git for signed commits
-        run: |
-          KEY_ID=$(gpg --list-secret-keys --keyid-format=long | grep sec | awk '{print $2}' | cut -d'/' -f2)
-
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git config --global user.signingkey "$KEY_ID"
-          git config --global commit.gpgsign true
-
-          git config --global gpg.program "gpg --batch --pinentry-mode loopback"
+          token: ${{ secrets.NAN_DNF }}
 
       - name: Update all submodules
         run: |
@@ -56,12 +32,9 @@ jobs:
 
       - name: Commit changes (SIGNED)
         if: steps.changes.outputs.changed == 'true'
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          export GPG_TTY=/dev/null
           git add .
-          git commit -S -m "chore: auto update submodules (signed)"
+          git commit -m "chore: auto update submodules (signed)"
 
       - name: Push
         if: steps.changes.outputs.changed == 'true'
