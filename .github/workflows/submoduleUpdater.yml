@@ -17,26 +17,40 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Import GPG key
+      - name: Setup GPG (non-interactive)
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+
+          echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+          echo "pinentry-mode loopback"  > ~/.gnupg/gpg.conf
+
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
           gpg-connect-agent reloadagent /bye
 
-      - name: Configure git signing
+      - name: Configure Git for signed commits
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          KEY_ID=$(gpg --list-secret-keys --keyid-format=long | grep sec | awk '{print $2}' | cut -d'/' -f2)
+
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git config --global commit.gpgsign true
           git config --global gpg.program gpg
-          git config --global user.signingkey $(gpg --list-secret-keys --keyid-format=long | grep sec | awk '{print $2}' | cut -d'/' -f2)
+          git config --global user.signingkey "$KEY_ID"
 
-      - name: Update submodules
+          git config --global gpg.format openpgp
+
+          echo "export GPG_TTY=/dev/null" >> ~/.bashrc
+
+      - name: Update all submodules
         run: |
           git submodule update --remote --recursive
 
-      - name: Check changes
+      - name: Detect changes
         id: changes
         run: |
           if git status --porcelain | grep .; then
@@ -45,13 +59,19 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit signed changes
+      - name: Commit changes (SIGNED)
         if: steps.changes.outputs.changed == 'true'
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           git add .
-          git commit -S -m "chore: auto update submodules (signed)"
 
-      - name: Push
+          printf "%s" "$GPG_PASSPHRASE" | \
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 -sba /dev/null >/dev/null
+
+          git commit -S --no-edit -m "chore: auto update submodules (signed)"
+
+      - name: Push changes
         if: steps.changes.outputs.changed == 'true'
         run: |
           git push origin HEAD
