@@ -40,3 +40,9 @@ jobs:
         run: node .github/bot/push.js
         env:
           BOT_TOKEN: ${{ env.BOT_TOKEN }}
+
+
+      - name: Create Pull request
+        run: node .github/bot/create-pr.js
+        env:
+           BOT_TOKEN: ${{ env.BOT_TOKEN }}
