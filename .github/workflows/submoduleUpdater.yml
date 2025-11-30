@@ -5,6 +5,10 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-submodules:
     runs-on: ubuntu-latest
@@ -14,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -22,27 +26,40 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        run: npm install node-fetch jsonwebtoken
+        run: npm install node-fetch@2 jsonwebtoken
 
+      # =============================
+      # 1. GENERATE INSTALLATION TOKEN
+      # =============================
       - name: Generate Bot Token
-        run: node .github/bot/token.js
+        id: token
+        run: |
+          node .github/bot/token.js >> $GITHUB_OUTPUT
         env:
           APP_ID: ${{ secrets.APP_ID }}
           INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
+      # =============================
+      # 2. UPDATE SUBMODULES
+      # =============================
       - name: Update submodules
         run: |
           git submodule update --remote --recursive
           git status
 
+      # =============================
+      # 3. COMMIT & PUSH AS BOT
+      # =============================
       - name: Commit & Push as Bot
         run: node .github/bot/push.js
         env:
-          BOT_TOKEN: ${{ env.BOT_TOKEN }}
+          BOT_TOKEN: ${{ steps.token.outputs.BOT_TOKEN }}
 
-
-      - name: Create Pull request
+      # =============================
+      # 4. CREATE PULL REQUEST
+      # =============================
+      - name: Create Pull Request
         run: node .github/bot/create-pr.js
         env:
-           BOT_TOKEN: ${{ env.BOT_TOKEN }}
+          BOT_TOKEN: ${{ steps.token.outputs.BOT_TOKEN }}
