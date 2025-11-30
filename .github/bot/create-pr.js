@@ -1,4 +1,4 @@
-°const https = require("https");
+const https = require("https");
 
 const token = process.env.BOT_TOKEN;
 const repo = process.env.GITHUB_REPOSITORY; // contoh: UocDev/Tachyon
