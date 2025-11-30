@@ -1,29 +1,71 @@
-import fetch from "node-fetch";
+°const https = require("https");
 
 const token = process.env.BOT_TOKEN;
-const repo = process.env.GITHUB_REPOSITORY;
+const repo = process.env.GITHUB_REPOSITORY; // contoh: UocDev/Tachyon
+const base = "master";                      // branch tujuan PR
+const head = "DonQuixote";                  // branch hasil update submodule
 
-const [owner, name] = repo.split("/");
+function api(path, method = "GET", body = null) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
 
-const res = await fetch(`https://api.github.com/repos/${owner}/${name}/pulls`, {
-  method: "POST",
-  headers: {
-    Authorization: `token ${token}`,
-    Accept: "application/vnd.github+json"
-  },
-  body: JSON.stringify({
-    title: "chore: auto update submodules",
-    head: "DonQuixote",
-    base: "master",
-    body: "Automated daily submodule update via GitHub App bot."
-  })
-});
+    const req = https.request(
+      {
+        hostname: "api.github.com",
+        path,
+        method,
+        headers: {
+          "User-Agent": "submodule-bot",
+          Authorization: `token ${token}`,
+          Accept: "application/vnd.github+json",
+          ...(data && {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(data)
+          })
+        }
+      },
+      res => {
+        let raw = "";
+        res.on("data", d => (raw += d));
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(raw));
+          } catch {
+            resolve(raw);
+          }
+        });
+      }
+    );
 
-const data = await res.json();
-
-if (!res.ok) {
-  console.error("Failed to create PR:", data);
-  process.exit(1);
+    req.on("error", reject);
+    if (data) req.write(data);
+    req.end();
+  });
 }
 
-console.log("Pull Request created:", data.html_url);
+(async () => {
+  // 1. Cek apakah PR dari DonQuixote → master sudah ada
+  const prs = await api(`/repos/${repo}/pulls?head=${repo.split("/")[0]}:${head}&base=${base}`);
+
+  if (Array.isArray(prs) && prs.length > 0) {
+    console.log("Pull Request already exists:", prs[0].html_url);
+    return;
+  }
+
+  // 2. Buat PR baru
+  const pr = await api(
+    `/repos/${repo}/pulls`,
+    "POST",
+    {
+      title: "chore: auto update submodules",
+      head,
+      base,
+      body: "Automated submodule update by bot via GitHub Actions."
+    }
+  );
+
+  console.log("Pull Request created:", pr.html_url);
+})().catch(err => {
+  console.error("Failed to create PR:", err);
+  process.exit(1);
+});
