@@ -21,6 +21,9 @@ kernel/
 # Distribution build
 release/
 iso/
+node_modules/
+package-lock.json
+package.json
 
 # rootFileSystem
 # boot
