@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+const { execSync } = require("child_process");
 
 const token = process.env.BOT_TOKEN;
 const repo = process.env.GITHUB_REPOSITORY;
