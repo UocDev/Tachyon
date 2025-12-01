@@ -1,8 +1,8 @@
-name: Daily Submodule Update
+name: Auto Update Submodules (Bot)
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 3 * * *"   # Setiap hari jam 03:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -10,33 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with submodules
         uses: actions/checkout@v4
         with:
-          submodules: true
-          fetch-depth: 1
+          token: ${{ secrets.BOT_TOKEN }}
+          submodules: recursive
+          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Configure Git as Bot
+        run: |
+          git config user.name  "QueenofLoveandHate"
+          git config user.email "queenofloveandhate@gmail.com"
 
-      - name: Install deps
-        run: npm install node-fetch jsonwebtoken
-
-      - name: Generate Bot Token
-        run: node .github/bot/token.js
-        env:
-          APP_ID: ${{ secrets.APP_ID }}
-          INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Update submodules
+      - name: Update all submodules
         run: |
           git submodule update --remote --recursive
-          git status
 
-      - name: Commit & Push as Bot
-        run: node .github/bot/push.js
-        env:
-          BOT_TOKEN: ${{ env.BOT_TOKEN }}
+      - name: Check for changes
+        id: changes
+        run: |
+          if git status --porcelain | grep .; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit submodule updates
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git add .
+          git commit -m "chore(submodule): auto update"
+
+      - name: Push changes using bot
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git push https://x-access-token:${{ secrets.BOT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:master
