@@ -1,6 +1,7 @@
 [submodule "dependencies/TachyonSubModule"]
 	path = dependencies/TachyonSubModule
 	url = https://github.com/UocDev/TachyonSubModule
+    branch = master
 [submodule "dependencies/bash"]
 	path = dependencies/bash
 	url = https://git.savannah.gnu.org/git/bash.git
