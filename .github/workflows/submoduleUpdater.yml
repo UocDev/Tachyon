@@ -17,10 +17,22 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Configure Git as Bot
+      - name: Setup SSH Signing Key
+        env:
+          SSH_SIGN_PRIVATE_KEY: ${{ secrets.SSH_SIGN_PRIVATE_KEY }}
         run: |
-          git config user.name  "QueenofLoveandHate"
+          mkdir -p ~/.ssh
+          echo "${SSH_SIGN_PRIVATE_KEY}" | base64 -d > ~/.ssh/id_ed25519_sign
+          chmod 600 ~/.ssh/id_ed25519_sign
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Configure Git as Bot with Signing
+        run: |
+          git config user.name "QueenofLoveandHate"
           git config user.email "queenofloveandhate@gmail.com"
+          git config gpg.format ssh
+          git config user.signingkey ~/.ssh/id_ed25519_sign.pub
+          git config commit.gpgsign true
 
       - name: Update all submodules
         run: |
@@ -35,13 +47,16 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit submodule updates
+      - name: Commit submodule updates (Signed)
         if: steps.changes.outputs.changed == 'true'
         run: |
           git add .
-          git commit -m "chore(submodule): auto update"
+          git commit -S -m "chore(submodule): auto update"
 
-      - name: Push changes using bot
+      - name: Push signed changes using PAT
         if: steps.changes.outputs.changed == 'true'
+        env:
+          PAT: ${{ secrets.TACHYON_PAT }}
         run: |
-          git push https://x-access-token:${{ secrets.BOT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:master
+          git remote set-url origin https://x-access-token:${PAT}@github.com/UocDev/Tachyon.git
+          git push origin HEAD:master
