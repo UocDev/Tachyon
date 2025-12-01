@@ -15,7 +15,7 @@ jobs:
         with:
           token: ${{ secrets.BOT_TOKEN }}
           submodules: recursive
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Configure Git as Bot
         run: |
