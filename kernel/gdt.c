@@ -112,7 +112,7 @@ void gdt_install(void)
     for (int i = 0; i < (int)sizeof(tss)/sizeof(uint32_t); ++i) ((uint32_t*)&tss)[i] = 0;
 
     /* set RSP0 to kernel stack provided by bootloader (stack_end symbol) if exists */
-    extern char stack_end; /* defined in bootloader.S */
+   //  extern char stack_end; /* defined in bootloader.S */
     tss.rsp0 = (uint64_t)&stack_end;
 
     /* IST1: point to our IST stack top (grow-down) */
@@ -158,3 +158,4 @@ void gdt_install(void)
     uint16_t tss_sel = 0x28;
     asm volatile ("ltr %0" : : "r"(tss_sel));
 }
+
