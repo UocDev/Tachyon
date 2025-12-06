@@ -7,11 +7,13 @@
 #include "idt.h"
 #include "gdt.h"    /* <-- added support for GDT/TSS */
 
+/* --- kernel stack (Option A: static stack defined in kernel) --- */
+/* 16 KiB aligned stack for kernel (RSP0), guaranteed 16-byte aligned */
 __attribute__((aligned(16)))
-uint8_t kernel_stack[8192];     // 8 KB kernel stack
+static uint8_t kernel_stack[16 * 1024];
 
-// simbol yang diminta gdt.c
-void *stack_end = &kernel_stack[8192];
+/* Export symbol expected by gdt.c (stack end = top of stack, stack grows down) */
+volatile void *stack_end = (void*)(kernel_stack + sizeof(kernel_stack));
 
 /* ---------- Serial (COM1) ---------- */
 static inline void outb(uint16_t port, uint8_t val) {
