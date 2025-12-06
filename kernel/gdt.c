@@ -18,6 +18,8 @@ struct __attribute__((packed)) gdtr {
 
 static uint64_t gdt_table[7]; /* 7 * 8 = 56 bytes, plus TSS uses two descriptors */
 
+extern void *stack_end;
+
 /* 64-bit TSS (structure fields we need) */
 struct __attribute__((packed)) tss_struct {
     uint32_t reserved0;
