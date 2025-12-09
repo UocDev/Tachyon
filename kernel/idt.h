@@ -1,8 +1,4 @@
-/* kernel/idt.h */
-
-// @UocDev — Type Notation
-// @NurAzizah — Helper
-
+// kernel/idt.h
 #ifndef IDT_H
 #define IDT_H
 
@@ -23,7 +19,9 @@ struct idt_ptr {
     uint64_t base;
 } __attribute__((packed));
 
-void idt_init();
-void idt_set_gate(int n, uint64_t handler);
+void idt_install(void);
+
+/* New: set gate with explicit IST value (0..7) */
+void idt_set_gate_ist(int n, void (*handler)(), uint8_t ist);
 
 #endif

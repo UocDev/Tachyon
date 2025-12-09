@@ -162,7 +162,7 @@ void kernel_main(void) {
     vga_puts("GDT+TSS installed.\n");
 
     vga_puts("Initializing IDT...\n");
-    idt_init();
+    idt_install();
     serial_write("IDT installed.\n");
     vga_puts("IDT installed.\n");
 
