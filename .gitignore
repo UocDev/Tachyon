@@ -21,6 +21,7 @@ kernel/
 # Distribution build
 release/
 iso/
+build/
 
 # rootFileSystem
 # boot
