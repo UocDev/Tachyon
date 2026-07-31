@@ -172,7 +172,7 @@ $(GRUB_CFG):
 iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 	@mkdir -p $(ISO_DIR)/boot
 	cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/
-	grub-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
+	grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
 # ============================================================================
 # Jalankan dengan QEMU
