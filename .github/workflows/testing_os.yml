@@ -1,11 +1,6 @@
 name: OS Test
 
 on:
-  push:
-    branches:
-      - master
-      - main
-      - hana
   pull_request:
 
 jobs:
@@ -17,13 +12,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
           dnf -y upgrade
 
-          dnf groupinstall -y \
+          dnf group install -y \
             "Development Tools" \
             "C Development Tools and Libraries"
 
@@ -53,8 +48,11 @@ jobs:
 
       - name: Boot OS in QEMU
         run: |
-          timeout --signal=SIGTERM 15s \
-            make run
+          timeout \
+          --signal=SIGTERM \
+          --kill-after=20s \
+          20s \
+          make run
 
       - name: Test finished
         run: |
