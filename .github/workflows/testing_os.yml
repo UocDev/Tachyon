@@ -1,0 +1,61 @@
+name: OS Test
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - hana
+  pull_request:
+
+jobs:
+  qemu-test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: fedora:44
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          dnf -y upgrade
+
+          dnf groupinstall -y \
+            "Development Tools" \
+            "C Development Tools and Libraries"
+
+          dnf install -y \
+            grub2-tools \
+            grub2-tools-extra \
+            xorriso \
+            mtools \
+            dosfstools \
+            nasm \
+            git \
+            qemu-system-x86 \
+            qemu-system-arm \
+            qemu-system-aarch64 \
+            qemu-img \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnu \
+            gcc-c++-aarch64-linux-gnu \
+            gcc-c++-arm-linux-gnu \
+            gcc-x86_64-linux-gnu \
+            gcc-c++-x86_64-linux-gnu
+
+      - name: Build ISO
+        run: |
+          make V=1
+          make iso V=1
+
+      - name: Boot OS in QEMU
+        run: |
+          timeout --signal=SIGTERM 15s \
+            make run
+
+      - name: Test finished
+        run: |
+          echo "QEMU boot test completed."
