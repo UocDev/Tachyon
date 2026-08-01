@@ -1,30 +1,27 @@
-# ============================================================================
-# Konfigurasi dasar
-# ============================================================================
 SHELL := /bin/bash
-.ONESHELL:
-.SHELLFLAGS := -eu -o pipefail -c
+# .ONESHELL:            # Disabled; interferes with verbose/silent output
+# .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
-MAKEFLAGS += --warn-undefined-variables
-MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
-# Direktori output
+# Output directories
 BUILD_DIR ?= build
 OBJ_DIR   := $(BUILD_DIR)/obj
 
-# ============================================================================
-# Deteksi arsitektur
-# ============================================================================
+# Verbosity control: V=1 shows full command lines, default shows short logs
+V ?= 0
+
+# Architecture selection: default to host architecture, can be overridden
 ARCH ?= $(shell uname -m)
 ARCH := $(ARCH)
 
-# Pilih toolchain berdasarkan arsitektur
+# Toolchain prefix selection based on target architecture
 ifeq ($(ARCH), x86_64)
     CROSS_COMPILE ?= x86_64-linux-gnu-
 else ifeq ($(ARCH), i386)
-    CROSS_COMPILE ?= i686-linux-gnu
+    CROSS_COMPILE ?= x86_64-linux-gnu-
 else ifeq ($(ARCH), i686)
-    CROSS_COMPILE ?= i686-linux-gnu
+    CROSS_COMPILE ?= x86_64-linux-gnu-
 else ifeq ($(ARCH), arm)
     CROSS_COMPILE ?= arm-linux-gnu-
 else ifeq ($(ARCH), aarch64)
@@ -33,18 +30,16 @@ else
     $(error Unsupported architecture: $(ARCH))
 endif
 
-# Tools
-CC  := $(CROSS_COMPILE)gcc
-CXX := $(CROSS_COMPILE)g++
-AS  := $(CROSS_COMPILE)as
-LD  := $(CROSS_COMPILE)ld
+# Compiler and tool definitions
+CC      := $(CROSS_COMPILE)gcc
+CXX     := $(CROSS_COMPILE)g++
+AS      := $(CROSS_COMPILE)as
+LD      := $(CROSS_COMPILE)ld
 OBJCOPY := $(CROSS_COMPILE)objcopy
 OBJDUMP := $(CROSS_COMPILE)objdump
 
-# ============================================================================
-# Bootloader dan Linker Script
-# ============================================================================
-BOOTLOADER_S := boot/bootloader_$(ARCH).S
+# Architecture‑specific bootloader and linker script
+BOOTLOADER_S  := boot/bootloader_$(ARCH).S
 LINKER_SCRIPT := linker/linker_$(ARCH).ld
 
 ifeq ($(wildcard $(BOOTLOADER_S)),)
@@ -54,109 +49,116 @@ ifeq ($(wildcard $(LINKER_SCRIPT)),)
     $(error Linker script $(LINKER_SCRIPT) not found)
 endif
 
-# ============================================================================
-# Flags
-# ============================================================================
-# C/C++ flags (sesuaikan dengan target OS)
+# Base flags – freestanding environment, no standard libraries
 CFLAGS   := -std=gnu11 -ffreestanding -nostdlib -Wall -Wextra -O2 -g
 CXXFLAGS := -std=gnu++17 -ffreestanding -nostdlib -fno-rtti -fno-exceptions -Wall -Wextra -O2 -g
-ASFLAGS  := --64   # untuk x86_64, sesuaikan untuk arch lain
 LDFLAGS  := -nostdlib -static -z max-page-size=0x1000
 
-# Tambahkan flag untuk arsitektur spesifik
+# Architecture‑specific flags
 ifeq ($(ARCH), x86_64)
     CFLAGS   += -m64 -mno-red-zone -fno-stack-protector -mcmodel=large
     CXXFLAGS += -m64 -mno-red-zone -fno-stack-protector -mcmodel=large
-    ASFLAGS  := --64
     LDFLAGS  += -m elf_x86_64
 else ifeq ($(ARCH), i386)
     CFLAGS   += -m32 -mno-red-zone -fno-stack-protector
     CXXFLAGS += -m32 -mno-red-zone -fno-stack-protector
-    ASFLAGS  := --32
+    LDFLAGS  += -m elf_i386
+else ifeq ($(ARCH), i686)
+    # i686 is a 32‑bit x86 variant, same code model as i386
+    CFLAGS   += -m32 -mno-red-zone -fno-stack-protector
+    CXXFLAGS += -m32 -mno-red-zone -fno-stack-protector
     LDFLAGS  += -m elf_i386
 else ifeq ($(ARCH), arm)
     CFLAGS   += -marm -mcpu=cortex-a8 -mfloat-abi=soft
     CXXFLAGS += -marm -mcpu=cortex-a8 -mfloat-abi=soft
-    ASFLAGS  := -march=armv7-a
     LDFLAGS  += -m armelf
+else ifeq ($(ARCH), aarch64)
+    # Use general registers only to avoid FP/SIMD in kernel code
+    CFLAGS   += -march=armv8-a -mgeneral-regs-only
+    CXXFLAGS += -march=armv8-a -mgeneral-regs-only
+    # Linker knows target via linker script; no explicit -m needed but set for safety
+    LDFLAGS  += -m aarch64elf
 endif
 
-# Flags untuk generate dependensi
+# Dependency generation flags
 DEPFLAGS = -MMD -MP -MF $(@:.o=.d)
 
-# ============================================================================
-# Kumpulkan semua source (kecuali direktori build)
-# ============================================================================
-SRCS := $(shell find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.S" \) -not -path "*/$(BUILD_DIR)/*")
+# Collect all C and C++ source files (excluding build directory)
+SRCS_C_CPP := $(shell find . -type f \( -name "*.c" -o -name "*.cpp" \) -not -path "*/$(BUILD_DIR)/*")
+SRCS_C_CPP := $(patsubst ./%,%,$(SRCS_C_CPP))
 
-# Ubah menjadi objek dengan path yang sama di dalam $(OBJ_DIR)
-OBJS := $(patsubst ./%,$(OBJ_DIR)/%,$(SRCS))
-OBJS := $(patsubst %.c,%.o,$(OBJS))
+# Add the architecture‑specific bootloader assembly file
+SRCS := $(SRCS_C_CPP) $(BOOTLOADER_S)
+
+# Transform source list into a list of object files under OBJ_DIR
+OBJS := $(patsubst %.c,%.o,$(SRCS))
 OBJS := $(patsubst %.cpp,%.o,$(OBJS))
 OBJS := $(patsubst %.S,%.o,$(OBJS))
+OBJS := $(addprefix $(OBJ_DIR)/,$(OBJS))
 
-# Daftar direktori sumber untuk VPATH
+# VPATH so Make can find sources in their original directories
 SRC_DIRS := $(sort $(dir $(SRCS)))
 VPATH := $(SRC_DIRS)
 
-# ============================================================================
-# Target utama
-# ============================================================================
-.PHONY: all clean distclean iso run submodules
+# Silent/verbose control
+ifeq ($(V),1)
+    Q :=                    # Execute commands without @
+    MSG := @true            # Suppress short log messages, full commands shown
+else
+    Q := @                  # Hide commands
+    MSG := @echo            # Print short description
+endif
 
+# Phony targets
+.PHONY: all clean distclean iso run debug submodules info help
+
+# Default target: build both ELF and raw binary
 all: $(BUILD_DIR)/kernel.elf $(BUILD_DIR)/kernel.bin
 
-# Build kernel ELF
+# Link the kernel ELF
 $(BUILD_DIR)/kernel.elf: $(OBJS) $(LINKER_SCRIPT)
 	@mkdir -p $(dir $@)
-	$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT) -o $@ $(OBJS)
-	$(OBJDUMP) -d $@ > $(BUILD_DIR)/kernel.asm
+	$(MSG) "  LD    $@"
+	$(Q)$(LD) $(LDFLAGS) -T $(LINKER_SCRIPT) -o $@ $(OBJS)
+	$(MSG) "  OBJDUMP $@"
+	$(Q)$(OBJDUMP) -d $@ > $(BUILD_DIR)/kernel.asm
 
-# Build kernel binary
+# Create a flat binary from the ELF
 $(BUILD_DIR)/kernel.bin: $(BUILD_DIR)/kernel.elf
-	$(OBJCOPY) -O binary $< $@
+	$(MSG) "  OBJCOPY $@"
+	$(Q)$(OBJCOPY) -O binary $< $@
 
-# ============================================================================
-# Aturan kompilasi per tipe file
-# ============================================================================
-# Compile C
+# Compile C sources
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(MSG) "  CC    $<"
+	$(Q)$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
-# Compile C++
+# Compile C++ sources
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(MSG) "  CXX   $<"
+	$(Q)$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
-# Compile Assembly (dengan preprocessor)
+# Assemble (with C preprocessor) .S files
 $(OBJ_DIR)/%.o: %.S
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(MSG) "  AS    $<"
+	$(Q)$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
-# ============================================================================
-# Dependensi otomatis
-# ============================================================================
+# Include auto‑generated dependency files
 DEPS := $(OBJS:.o=.d)
 -include $(DEPS)
 
-# ============================================================================
-# Submodule support
-# ============================================================================
+# Build submodules if any
 SUBMODULES := $(shell find . -mindepth 2 -maxdepth 2 -type f -name "Makefile" -printf "%h\n" | sort -u)
 
 submodules:
 	@for dir in $(SUBMODULES); do \
-		echo "Making in $$dir"; \
 		$(MAKE) -C $$dir; \
 	done
 
-# Jika ingin include sub-Makefile (misal untuk menambahkan aturan tambahan)
-# include $(wildcard */Makefile)  # hati-hati dengan konflik
-
-# ============================================================================
-# ISO Image (untuk boot dengan GRUB)
-# ============================================================================
+# ISO image creation (Multiboot2 via GRUB)
 ISO_DIR := $(BUILD_DIR)/iso
 GRUB_CFG := $(ISO_DIR)/boot/grub/grub.cfg
 
@@ -171,41 +173,67 @@ $(GRUB_CFG):
 
 iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 	@mkdir -p $(ISO_DIR)/boot
-	cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/
-	grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
+	$(MSG) "  ISO   $@"
+	$(Q)cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/
+	$(Q)grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
-# ============================================================================
-# Jalankan dengan QEMU
-# ============================================================================
+# QEMU emulation
 QEMU := qemu-system-$(ARCH)
 ifeq ($(ARCH), x86_64)
     QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
 else ifeq ($(ARCH), i386)
     QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
+else ifeq ($(ARCH), i686)
+    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
 else ifeq ($(ARCH), arm)
+    QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
+else ifeq ($(ARCH), aarch64)
     QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
 endif
 
+# Run the kernel normally
 run: iso
-	$(QEMU) $(QEMU_OPTS)
+	$(MSG) "  QEMU  $(QEMU) $(QEMU_OPTS)"
+	$(Q)$(QEMU) $(QEMU_OPTS)
 
-# ============================================================================
-# Pembersihan
-# ============================================================================
+# Run the kernel with a GDB stub (listening on port 1234)
+debug: iso
+	$(MSG) "  QEMU (debug) $(QEMU) $(QEMU_OPTS) -s -S"
+	$(Q)$(QEMU) $(QEMU_OPTS) -s -S
+
+# Clean build artifacts
 clean:
-	rm -rf $(BUILD_DIR)
+	$(MSG) "  CLEAN"
+	$(Q)rm -rf $(BUILD_DIR)
 
+# Deep clean: remove build directory and all dependency files
 distclean: clean
-	rm -rf $(BUILD_DIR)/iso
-	find . -name "*.d" -delete
+	$(Q)find . -name "*.d" -delete
 
-# ============================================================================
-# Informasi
-# ============================================================================
+# Print current build configuration
 info:
-	@echo "ARCH = $(ARCH)"
-	@echo "CROSS_COMPILE = $(CROSS_COMPILE)"
-	@echo "BOOTLOADER_S = $(BOOTLOADER_S)"
-	@echo "LINKER_SCRIPT = $(LINKER_SCRIPT)"
-	@echo "SRCS = $(SRCS)"
-	@echo "OBJS = $(OBJS)"
+	@echo "ARCH           = $(ARCH)"
+	@echo "CROSS_COMPILE  = $(CROSS_COMPILE)"
+	@echo "BOOTLOADER_S   = $(BOOTLOADER_S)"
+	@echo "LINKER_SCRIPT  = $(LINKER_SCRIPT)"
+	@echo "SRCS           = $(SRCS)"
+	@echo "OBJS           = $(OBJS)"
+
+# Show usage help
+help:
+	@echo "Usage: make [target] [ARCH=arch] [V=1]"
+	@echo ""
+	@echo "Common targets:"
+	@echo "  all        - Build kernel.elf and kernel.bin"
+	@echo "  iso        - Create a bootable ISO image (via GRUB)"
+	@echo "  run        - Build and run the kernel in QEMU"
+	@echo "  debug      - Build and run with GDB stub (port 1234)"
+	@echo "  clean      - Remove the build directory"
+	@echo "  distclean  - Clean and delete all dependency files"
+	@echo "  submodules - Build any external submodules"
+	@echo "  info       - Show configuration details"
+	@echo "  help       - Show this help"
+	@echo ""
+	@echo "Variables:"
+	@echo "  ARCH       - Target architecture (x86_64, i386, i686, arm, aarch64)"
+	@echo "  V=1        - Enable verbose output (show full commands)"
