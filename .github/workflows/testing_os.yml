@@ -19,8 +19,8 @@ jobs:
           dnf -y upgrade
 
           dnf group install -y \
-            "Development Tools" \
-            "C Development Tools and Libraries"
+            development-tools \
+            c-development
 
           dnf install -y \
             grub2-tools \
