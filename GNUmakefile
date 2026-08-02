@@ -178,17 +178,18 @@ iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 	$(Q)grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
 # QEMU emulation
-QEMU := qemu-system-$(ARCH)
-ifeq ($(ARCH), x86_64)
-    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
-else ifeq ($(ARCH), i386)
-    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
-else ifeq ($(ARCH), i686)
-    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
-else ifeq ($(ARCH), arm)
+# Tentukan QEMU dan opsi berdasarkan arsitektur
+ifeq ($(ARCH), arm)
+    QEMU := qemu-system-arm
     QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
 else ifeq ($(ARCH), aarch64)
+    QEMU := qemu-system-aarch64
     QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
+else
+    # i386, i686, x86_64, atau arsitektur lain yang tidak dikenali
+    # Gunakan qemu-system-x86_64 karena fully compatible dengan 32-bit
+    QEMU := qemu-system-x86_64
+    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
 endif
 
 # Run the kernel normally
