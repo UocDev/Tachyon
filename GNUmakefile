@@ -178,18 +178,51 @@ iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 	$(Q)grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
 # QEMU emulation
-# Tentukan QEMU dan opsi berdasarkan arsitektur
-ifeq ($(ARCH), arm)
+# ============================================================================
+# QEMU Configuration
+# ============================================================================
+
+# Common QEMU options
+QEMU_COMMON_OPTS := \
+    -m 1GB \
+    -monitor none \
+    -no-reboot \
+    -no-shutdown
+
+# Debug options
+QEMU_DEBUG_OPTS := \
+    -d guest_errors,cpu_reset \
+    -D $(BUILD_DIR)/qemu.log
+
+ifeq ($(ARCH),arm)
     QEMU := qemu-system-arm
-    QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
-else ifeq ($(ARCH), aarch64)
+    QEMU_OPTS := \
+        $(QEMU_COMMON_OPTS) \
+        -M virt \
+        -cpu cortex-a15 \
+        -kernel $(BUILD_DIR)/kernel.elf \
+        -nographic \
+        $(QEMU_DEBUG_OPTS)
+
+else ifeq ($(ARCH),aarch64)
     QEMU := qemu-system-aarch64
-    QEMU_OPTS := -kernel $(BUILD_DIR)/kernel.elf -M virt -m 256M -nographic
+    QEMU_OPTS := \
+        $(QEMU_COMMON_OPTS) \
+        -M virt \
+        -cpu cortex-a57 \
+        -kernel $(BUILD_DIR)/kernel.elf \
+        -nographic \
+        $(QEMU_DEBUG_OPTS)
+
 else
-    # i386, i686, x86_64, atau arsitektur lain yang tidak dikenali
-    # Gunakan qemu-system-x86_64 karena fully compatible dengan 32-bit
+    # x86 (i386, i686, x86_64)
     QEMU := qemu-system-x86_64
-    QEMU_OPTS := -cdrom $(BUILD_DIR)/os.iso -m 256M -serial mon:stdio
+    QEMU_OPTS := \
+        $(QEMU_COMMON_OPTS) \
+        -cdrom $(BUILD_DIR)/os.iso \
+        -display none \
+        -serial stdio \
+        $(QEMU_DEBUG_OPTS)
 endif
 
 # Run the kernel normally
