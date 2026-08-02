@@ -2,22 +2,6 @@
 # whitelist using: ! (!rootFileSystem/boot/*.txt)
 
 # Source code
-# boot
-boot/
-!boot/bootloader.S
-!boot/Makefile
-!boot/grub.cfg
-
-# kernel
-kernel/
-!kernel/kernel.c
-!kernel/Makefile
-!kernel/isr.S
-!kernel/idt.c
-!kernel/idt.h
-!/kernel/gdt.c
-!/kernel/gdt.h
-
 # Distribution build
 release/
 iso/
@@ -25,5 +9,5 @@ build/
 
 # rootFileSystem
 # boot
-rootFileSystem/boot/*
-!rootFileSystem/boot/README.md
+# rootFileSystem/boot/*
+# !rootFileSystem/boot/README.md
