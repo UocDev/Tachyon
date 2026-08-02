@@ -11,11 +11,12 @@ void kernel_exit(int status) {
     // Untuk Bochs: tulis ke port 0x501 juga (atau 0xE9 untuk shutdown?)
     // Di hardware nyata: tidak didukung, jadi hanya HLT
 #if defined(__i386__) || defined(__x86_64__)
-    __asm__ volatile (
-        "outb %0, $0x501"
-        :
-        : "a"((unsigned char)status)
-    );
+unsigned short port = 0x501;
+__asm__ volatile (
+    "outb %0, %1"
+    :
+    : "a"((unsigned char)status), "d"(port)
+);
 #endif
 
     // Fallback: jika tidak keluar, hentikan CPU selamanya
