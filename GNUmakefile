@@ -184,7 +184,7 @@ iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 
 # Common QEMU options
 QEMU_COMMON_OPTS := \
-    -m 1GB \
+    -m 1G \
     -monitor none \
     -no-reboot \
     -no-shutdown
