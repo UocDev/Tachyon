@@ -50,8 +50,8 @@ ifeq ($(wildcard $(LINKER_SCRIPT)),)
 endif
 
 # Base flags – freestanding environment, no standard libraries
-CFLAGS   := -std=gnu11 -ffreestanding -nostdlib -Wall -Wextra -O2 -g
-CXXFLAGS := -std=gnu++17 -ffreestanding -nostdlib -fno-rtti -fno-exceptions -Wall -Wextra -O2 -g
+CFLAGS   := -std=gnu11 -ffreestanding -nostdlib -Wall -Wextra -O0 -g
+CXXFLAGS := -std=gnu++17 -ffreestanding -nostdlib -fno-rtti -fno-exceptions -Wall -Wextra -O0 -g
 LDFLAGS  := -nostdlib -static -z max-page-size=0x1000
 
 # Architecture‑specific flags
@@ -84,7 +84,7 @@ endif
 DEPFLAGS = -MMD -MP -MF $(@:.o=.d)
 
 # Collect all C and C++ source files (excluding build directory)
-SRCS_C_CPP := $(shell find . -type f \( -name "*.c" -o -name "*.cpp" \) -not -path "*/$(BUILD_DIR)/*")
+SRCS_C_CPP := $(shell find . -type f \( -name "*.c" -o -name "*.cxx" \) -not -path "*/$(BUILD_DIR)/*")
 SRCS_C_CPP := $(patsubst ./%,%,$(SRCS_C_CPP))
 
 # Add the architecture‑specific bootloader assembly file
@@ -93,6 +93,7 @@ SRCS := $(SRCS_C_CPP) $(BOOTLOADER_S)
 # Transform source list into a list of object files under OBJ_DIR
 OBJS := $(patsubst %.c,%.o,$(SRCS))
 OBJS := $(patsubst %.cpp,%.o,$(OBJS))
+OBJS := $(patsubst %.cxx,%.o,$(OBJS))
 OBJS := $(patsubst %.S,%.o,$(OBJS))
 OBJS := $(addprefix $(OBJ_DIR)/,$(OBJS))
 
@@ -135,7 +136,7 @@ $(OBJ_DIR)/%.o: %.c
 	$(Q)$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # Compile C++ sources
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.o: %.cxx
 	@mkdir -p $(dir $@)
 	$(MSG) "  CXX   $<"
 	$(Q)$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
@@ -178,10 +179,6 @@ iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
 	$(Q)grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
 # QEMU emulation
-# ============================================================================
-# QEMU Configuration
-# ============================================================================
-
 # Common QEMU options
 QEMU_COMMON_OPTS := \
     -m 1G \
