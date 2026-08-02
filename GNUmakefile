@@ -184,12 +184,12 @@ QEMU_COMMON_OPTS := \
     -m 1G \
     -monitor none \
     -no-reboot \
-    -no-shutdown
+    -no-shutdown \
+    -device isa-debug-exit,iobase=0x501,iosize=4
 
 # Debug options
 QEMU_DEBUG_OPTS := \
-    -d guest_errors,cpu_reset \
-    -D $(BUILD_DIR)/qemu.log
+    -d guest_errors,cpu_reset
 
 ifeq ($(ARCH),arm)
     QEMU := qemu-system-arm
