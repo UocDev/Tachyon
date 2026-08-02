@@ -161,21 +161,12 @@ submodules:
 
 # ISO image creation (Multiboot2 via GRUB)
 ISO_DIR := $(BUILD_DIR)/iso
-GRUB_CFG := $(ISO_DIR)/boot/grub/grub.cfg
 
-$(GRUB_CFG):
-	@mkdir -p $(dir $@)
-	@echo "set timeout=0" > $@
-	@echo "set default=0" >> $@
-	@echo "menuentry \"MyOS\" {" >> $@
-	@echo "  multiboot2 /boot/kernel.elf" >> $@
-	@echo "  boot" >> $@
-	@echo "}" >> $@
-
-iso: $(BUILD_DIR)/kernel.elf $(GRUB_CFG)
-	@mkdir -p $(ISO_DIR)/boot
+iso: $(BUILD_DIR)/kernel.elf
+	@mkdir -p $(ISO_DIR)/boot/grub
 	$(MSG) "  ISO   $@"
 	$(Q)cp $(BUILD_DIR)/kernel.elf $(ISO_DIR)/boot/
+	$(Q)cp boot/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
 	$(Q)grub2-mkrescue -o $(BUILD_DIR)/os.iso $(ISO_DIR)
 
 # QEMU emulation

@@ -6,9 +6,9 @@ SECTIONS
     /* Kernel dimuat pada alamat fisik 1 MiB */
     . = 1M;
 
-    /* Pastikan header Multiboot berada di awal */
-    .multiboot : {
-        *(.multiboot)
+    /* Pastikan header Multiboot berada di awal, tidak dibuang */
+    .multiboot ALIGN(4) : {
+        KEEP(*(.multiboot))
     }
 
     .text ALIGN(4K) : {
