@@ -208,7 +208,7 @@ else
     QEMU_OPTS := \
         $(QEMU_COMMON_OPTS) \
         -cdrom $(BUILD_DIR)/os.iso \
-        -display none \
+        -display curses \
         -serial stdio \
         $(QEMU_DEBUG_OPTS)
 endif
