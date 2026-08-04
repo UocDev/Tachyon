@@ -39,7 +39,7 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 OBJDUMP := $(CROSS_COMPILE)objdump
 
 # Architecture‑specific bootloader and linker script
-BOOTLOADER_S  := boot/bootloader_$(ARCH).S
+BOOTLOADER_S  := arch/${ARCH}/bootloader_$(ARCH).S
 LINKER_SCRIPT := linker/linker_$(ARCH).ld
 
 ifeq ($(wildcard $(BOOTLOADER_S)),)
@@ -50,8 +50,8 @@ ifeq ($(wildcard $(LINKER_SCRIPT)),)
 endif
 
 # Base flags – freestanding environment, no standard libraries
-CFLAGS   := -std=gnu11 -ffreestanding -nostdlib -Wall -Wextra -O0 -g
-CXXFLAGS := -std=gnu++17 -ffreestanding -nostdlib -fno-rtti -fno-exceptions -Wall -Wextra -O0 -g
+CFLAGS   := -std=c17 -ffreestanding -nostdlib -Wall -Wextra -pedantic -Wpedantic -pedantic-errors -O0 -g
+CXXFLAGS := -std=c++17 -ffreestanding -nostdlib -fno-rtti -fno-exceptions -Wall -Wextra -pedantic -Wpedantic -pedantic-errors -O0 -g
 LDFLAGS  := -nostdlib -static -z max-page-size=0x1000
 
 # Architecture‑specific flags
@@ -172,7 +172,7 @@ iso: $(BUILD_DIR)/kernel.elf
 # QEMU emulation
 # Common QEMU options
 QEMU_COMMON_OPTS := \
-    -m 1G \
+    -m 512M \
     -monitor none \
     -no-reboot \
     -no-shutdown \
@@ -180,7 +180,8 @@ QEMU_COMMON_OPTS := \
 
 # Debug options
 QEMU_DEBUG_OPTS := \
-    -d guest_errors,cpu_reset
+    -d guest_errors,cpu_reset \
+    -D build/qemu.log
 
 ifeq ($(ARCH),arm)
     QEMU := qemu-system-arm

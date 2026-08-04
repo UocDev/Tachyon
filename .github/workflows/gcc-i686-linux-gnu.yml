@@ -1,0 +1,24 @@
+name: GCC i686  Linux GNU
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: fedora:latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          chmod +x scripts/install-fedora.sh
+          ./scripts/install-fedora.sh
+
+      - name: Build cross compiler
+        run: |
+          chmod +x scripts/build-gcc-i686-linux-gnu.sh
+          ./scripts/build-gcc-i686-linux-gnu.sh
